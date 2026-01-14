@@ -1,0 +1,46 @@
+name: Stale Issue Comment
+author: Alexander Thoukydides
+description: Use AI to summarise an issue that has been marked as stale and post a new comment
+branding:
+  icon: 'check-square'
+  color: 'blue'
+
+inputs:
+  issue_number:
+    description: The GitHub issue to summarise
+    required: true
+    type: number
+  dry_run:
+    description: Disables actions that modify the issue (adding the comment and minimising previous comments) for testing
+    type: boolean
+    default: false
+
+runs:
+  using: composite
+
+  steps:
+    - name: Summarise the issue and its comments
+      id: summarise
+      uses: thoukydides/action-issue-ai-summary@v1
+      with:
+        issue_number: ${{ inputs.issue_number }}
+        prompt_file: ${{ github.action_path }}/stale-issue-comment.prompt.yml
+        input_prompt_tokens: 900 # Measured using https://platform.openai.com/tokenizer
+
+    - name: Add the summary comment to the workflow summary
+      env:
+        SUMMARY: |
+          # ${{ steps.summarise.outputs.issue_title }} [#${{ inputs.issue_number }}](${{ steps.summarise.outputs.issue_url }})
+        
+          ${{ steps.summarise.outputs.response }}
+      shell: bash
+      run: | # shell
+        printf '%s' "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Post the summary comment
+      if: inputs.dry_run == false
+      uses: thoukydides/action-post-issue-comment@v1
+      with:
+        issue_number: ${{ inputs.issue_number }}
+        body: ${{ steps.summarise.outputs.response }}
+        marker: '<!-- ai-stale-summary -->'
