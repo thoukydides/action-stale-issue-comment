@@ -38,7 +38,7 @@ runs:
         printf '%s' "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
 
     - name: Post the summary comment
-      if: ${{ !inputs.dry_run }}
+      if: ${{ inputs.dry_run != 'true' }}
       uses: thoukydides/action-post-issue-comment@v1
       with:
         issue_number: ${{ inputs.issue_number }}
