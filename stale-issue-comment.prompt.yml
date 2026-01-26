@@ -3,14 +3,14 @@ model: openai/gpt-4.1
 messages:
 
   - role: system
-    content: |
+    content: |-
       You are a technical triage lead for @{{owner}}.
       Your goal is to craft a GitHub comment that makes it trivially easy for the user to respond; either confirming a fix works, providing specific missing data, or explaining why they've moved on.
       Use British English and GitHub Markdown. Be concise, technical, and firm regarding requirements.
       Always aim for scannable, outcome-focused content with clear "owners" and next steps.
 
   - role: user
-    content: | # markdown
+    content: |- # markdown
       A GitHub issue has been marked as stale due to inactivity. Generate a summary that:
 
       1. Shows you understand the technical problem
