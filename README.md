@@ -1,9 +1,9 @@
 # `action-stale-issue-summary`
 
-This action turns a <kbd>stale</kbd> label into a structured triage ping that tells the reporter exactly what is blocking an issue:
+This action uses Google Gemini to turn a <kbd>stale</kbd> label into a structured triage ping that tells the reporter exactly what is blocking an issue:
 - **Fetch Issue and Comments**: Retrieves the issue body and all comments, excluding bot comments.
 - **Truncate Content**: Intelligently truncates logs, code blocks, and long text to fit the AI model's context limit.
-- **Generate Summary**: Uses GitHub Models to generate a structured summary with next steps.
+- **Generate Summary**: Uses Google AI Studio to generate a structured summary with next steps.
 - **Post and Minimise**: Posts the summary as a comment and minimises any previous summaries to reduce noise.
 
 > [!CAUTION]
@@ -12,19 +12,12 @@ This action turns a <kbd>stale</kbd> label into a structured triage ping that te
 ## Prerequisites
 
 Before using this workflow, ensure:
-- GitHub Models is enabled for this repository (Settings → Models → Enabled).
-- The workflow has `issues: write`, `contents: read`, and `models: read` permissions (either via the default `GITHUB_TOKEN` or a fine-grained token).
-- You understand the [rate limits](https://docs.github.com/en/github-models/use-github-models/prototyping-with-ai-models#rate-limits) for your usage tier.
+- The workflow has `issues: write` and `contents: read` permissions (either via the default `GITHUB_TOKEN` or a fine-grained token).
+- You have created a [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) and placed it in a repository secret (e.g. `GEMINI_API_KEY`).
+- You understand the [rate limits](https://ai.google.dev/gemini-api/docs/rate-limits) for your chosen model and usage tier.
 
-## Rate Limits and Concurrency
-
-Each invocation makes one GitHub Models API call. At the time of writing, this action uses a model on the **High** rate limit tier which has the following limits on the free tier:
-- 2 concurrent requests
-- 10 requests/minute
-- 50 requests/day
-
-> [!CAUTION]
-> This action is not designed for high-volume repositories. If multiple stale issues are labelled in the same minute, these limits are likely to be exceeded; subsequent runs will fail with HTTP 429 errors until the rate limit resets.
+> [!TIP]
+> Google AI Studio Gemini rate limits are per-project. Create multiple projects, each with its own API key, to increase quotas.
 
 ## Inputs
 
@@ -32,6 +25,7 @@ Various inputs are defined in the action to configure its operation:
 
 | Name | Description | Default
 | --- | --- | ---
+| `gemini_api_key`: The Google AI Studio Gemini API key | *required*
 | `issue_number` | The GitHub issue to summarise | *required*
 | `dry_run` | Disables actions that modify the issue (adding the comment and minimising previous comments) for testing | `false`
 
@@ -44,7 +38,6 @@ name: AI Stale Issue Summary
 permissions:
   issues: write
   contents: read
-  models: read
 
 on:
   issues:
@@ -69,6 +62,7 @@ jobs:
       if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'stale'
       uses: thoukydides/action-stale-issue-comment@v1
       with:
+        gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
         # Use the event issue number for label triggers, or the manual input for workflow_dispatch
         issue_number: ${{ github.event.issue.number || fromJson(inputs.issue_number) }}
         dry_run: ${{ inputs.dry_run }}
@@ -90,7 +84,6 @@ permissions:
 on:
   schedule:
   # Runs at 01:30 UTC daily
-  # Stagger different repos to avoid hitting GitHub Models rate limits
   - cron: '30 1 * * *'
 
 jobs:

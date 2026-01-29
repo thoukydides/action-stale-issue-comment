@@ -6,6 +6,10 @@ branding:
   color: 'blue'
 
 inputs:
+  gemini_api_key:
+    description: The Google AI Studio Gemini API key
+    required: true
+    type: string
   issue_number:
     description: The GitHub issue to summarise
     required: true
@@ -23,9 +27,10 @@ runs:
       id: summarise
       uses: thoukydides/action-issue-ai-summary@v1
       with:
+        gemini_api_key: ${{ inputs.gemini_api_key }}
         issue_number: ${{ inputs.issue_number }}
         prompt_file: ${{ github.action_path }}/stale-issue-comment.prompt.yml
-        input_prompt_tokens: 1050 # Measured using https://platform.openai.com/tokenizer
+        input_prompt_tokens: 1050 # Measured using https://aistudio.google.com/prompts/new_chat
 
     - name: Add the summary comment to the workflow summary
       env:
