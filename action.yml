@@ -32,20 +32,10 @@ runs:
         prompt_file: ${{ github.action_path }}/stale-issue-comment.prompt.yml
         input_prompt_tokens: 1050 # Measured using https://aistudio.google.com/prompts/new_chat
 
-    - name: Add the summary comment to the workflow summary
-      env:
-        SUMMARY: |
-          # ${{ steps.summarise.outputs.issue_title }} [#${{ inputs.issue_number }}](${{ steps.summarise.outputs.issue_url }})
-        
-          ${{ steps.summarise.outputs.response }}
-      shell: bash
-      run: | # shell
-        printf '%s' "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
-
     - name: Post the summary comment
-      if: ${{ inputs.dry_run != 'true' }}
       uses: thoukydides/action-post-issue-comment@v1
       with:
         issue_number: ${{ inputs.issue_number }}
         body: ${{ steps.summarise.outputs.response }}
         marker: '<!-- ai-stale-summary -->'
+        dry_run: ${{ inputs.dry_run }}
