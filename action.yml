@@ -30,7 +30,7 @@ runs:
         gemini_api_key: ${{ inputs.gemini_api_key }}
         issue_number: ${{ inputs.issue_number }}
         prompt_file: ${{ github.action_path }}/stale-issue-comment.prompt.yml
-        input_prompt_tokens: 1050 # Measured using https://aistudio.google.com/prompts/new_chat
+        input_prompt_tokens: 1100 # Measured using https://aistudio.google.com/prompts/new_chat
 
     - name: Post the summary comment
       uses: thoukydides/action-post-issue-comment@v1
